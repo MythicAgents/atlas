@@ -90,7 +90,7 @@ class Atlas(PayloadType):
                     if isinstance(val, dict):
                         file1 = file1.replace(key, val["enc_key"] if val["enc_key"] is not None else "")
                     elif key == "headers":
-                        hl = json.loads(val)
+                        hl = val
                         hl = {n["key"]:n["value"] for n in hl}
                         file1 = file1.replace("USER_AGENT", hl["User-Agent"])
                         if "Host" in hl:
@@ -102,7 +102,7 @@ class Atlas(PayloadType):
             with open("{}/Config.cs".format(agent_build_path.name), "w") as f:
                 f.write(file1)
             defines = ["TRACE"]
-            if profile == "HTTP":
+            if profile == "http":
                 if (
                     self.c2info[0].get_parameters_dict()["encrypted_exchange_check"]
                     == "T"
