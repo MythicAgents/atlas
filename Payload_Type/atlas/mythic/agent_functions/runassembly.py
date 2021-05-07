@@ -1,6 +1,6 @@
 from mythic_payloadtype_container.MythicCommandBase import *
 import json
-from mythic_payloadtype_container.MythicFileRPC import *
+from mythic_payloadtype_container.MythicRPC import *
 
 
 class RunAssemblyArguments(TaskArguments):
@@ -8,7 +8,7 @@ class RunAssemblyArguments(TaskArguments):
         super().__init__(command_line)
         self.args = {
             "assembly_id": CommandParameter(
-                name="assembly_id", type=ParameterType.String, description=""
+                name="Loaded Assembly Name", type=ParameterType.String, description="", ui_position=1
             ),
             "args": CommandParameter(
                 name="args", type=ParameterType.String, required=False
@@ -17,14 +17,14 @@ class RunAssemblyArguments(TaskArguments):
 
     async def parse_arguments(self):
         if len(self.command_line) > 0:
-            if self.command_line[0] == "{":
+            try:
                 self.load_args_from_json_string(self.command_line)
-            else:
+            except:
                 pieces = self.command_line.split(" ")
                 self.add_arg("assembly_id", pieces[0])
                 self.add_arg("args", " ".join(pieces[1:]))
         else:
-            raise ValueError("Missing required arguments")
+            raise Exception("Missing required arguments")
 
 
 class RunAssemblyCommand(CommandBase):
@@ -33,25 +33,19 @@ class RunAssemblyCommand(CommandBase):
     help_cmd = "runassembly [filename] [assembly arguments]"
     description = "Execute the entrypoint of a assembly loaded by the loadassembly command and redirect the console output back to the Apfell server."
     version = 1
-    is_exit = False
-    is_file_browse = False
-    is_process_list = False
-    is_download_file = False
-    is_remove_file = False
-    is_upload_file = False
     author = ""
     argument_class = RunAssemblyArguments
     attackmapping = []
 
     async def create_tasking(self, task: MythicTask) -> MythicTask:
-        resp = await MythicFileRPC(task).get_file_by_name(
-            task.args.get_arg("assembly_id")
-        )
+        # the get_file call always returns an array of matching files limited by how many we specify
+        resp = await MythicRPC().execute("get_file", task_id=task.id, filename=task.args.get_arg("assembly_id"))
         if resp.status == MythicStatus.Success:
-            task.args.add_arg("assembly_id", resp.agent_file_id)
+            task.display_params = task.args.get_arg("assembly_id") + " " + task.args.get_arg("args")
+            task.args.add_arg("assembly_id", resp.response[0]["agent_file_id"])
         else:
-            raise ValueError(
-                "Failed to find file:  {}".format(task.args.get_arg("assembly_id"))
+            raise Exception(
+                "Failed to find file:  {}".format(task.args.command_line)
             )
         return task
 

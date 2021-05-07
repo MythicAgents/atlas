@@ -18,15 +18,9 @@ class DownloadCommand(CommandBase):
     cmd = "download"
     needs_admin = False
     help_cmd = "download [path to remote file]"
-    description = "Download a file from the victim machine to the apfell server in chunks (no need for quotes in the path). It will be saved to app/files/{operation name}/downloads/{hostname}/{filename}"
+    description = "Download a file from the victim machine to the apfell server in chunks (no need for quotes in the path)"
     version = 1
-    is_exit = False
-    is_file_browse = False
-    is_process_list = False
-    is_download_file = False
-    is_remove_file = False
-    is_upload_file = False
-    author = ""
+    author = "@Airzero24"
     argument_class = DownloadArguments
     attackmapping = []
 

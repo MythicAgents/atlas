@@ -1,5 +1,4 @@
 from mythic_payloadtype_container.MythicCommandBase import *
-import json
 
 
 class ConfigArguments(TaskArguments):
@@ -47,13 +46,7 @@ config proxy username harm.j0y
 config proxy password Liv3F0rTh3Tw!ts
 """
     version = 1
-    is_exit = False
-    is_file_browse = False
-    is_process_list = False
-    is_download_file = False
-    is_remove_file = False
-    is_upload_file = False
-    author = ""
+    author = "@Airzero24"
     argument_class = ConfigArguments
     attackmapping = []
 

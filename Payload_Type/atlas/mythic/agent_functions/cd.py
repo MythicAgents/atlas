@@ -1,5 +1,4 @@
 from mythic_payloadtype_container.MythicCommandBase import *
-import json
 
 
 class CdArguments(TaskArguments):
@@ -17,13 +16,7 @@ class CdCommand(CommandBase):
     help_cmd = "cd [C:\\path\\to\\change\\to]"
     description = "Change current working directory of Atlas instance."
     version = 1
-    is_exit = False
-    is_file_browse = False
-    is_process_list = False
-    is_download_file = False
-    is_remove_file = False
-    is_upload_file = False
-    author = ""
+    author = "@Airzero24"
     argument_class = CdArguments
     attackmapping = []
 

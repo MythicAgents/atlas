@@ -17,12 +17,6 @@ class PwdCommand(CommandBase):
     help_cmd = "pwd"
     description = "Get current working directory of Atlas instance."
     version = 1
-    is_exit = False
-    is_file_browse = False
-    is_process_list = False
-    is_download_file = False
-    is_remove_file = False
-    is_upload_file = False
     author = ""
     argument_class = PwdArguments
     attackmapping = []

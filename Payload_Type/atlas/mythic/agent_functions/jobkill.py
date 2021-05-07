@@ -29,17 +29,12 @@ class JobKillCommand(CommandBase):
     help_cmd = "jobkill [job id]"
     description = "Kills a running job and removes it from the atlas instance's list of running jobs."
     version = 1
-    is_exit = False
-    is_file_browse = False
-    is_process_list = False
-    is_download_file = False
-    is_remove_file = False
-    is_upload_file = False
     author = ""
     argument_class = JobKillArguments
     attackmapping = []
 
     async def create_tasking(self, task: MythicTask) -> MythicTask:
+        task.display_params = task.args.get_arg("job_id")
         return task
 
     async def process_response(self, response: AgentResponse):

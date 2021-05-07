@@ -1,12 +1,10 @@
 from mythic_payloadtype_container.MythicCommandBase import *
 from mythic_payloadtype_container.PayloadBuilder import *
-import uuid
 import asyncio
 import os
 from distutils.dir_util import copy_tree
 import tempfile
-import json
-
+import sys
 
 class Atlas(PayloadType):
 
@@ -15,6 +13,7 @@ class Atlas(PayloadType):
     author = "@Airzero24"
     supported_os = [SupportedOS.Windows]
     wrapper = False
+    mythic_encrypts = True
     wrapped_payloads = ["service_wrapper"]
     note = """This payload uses C# to target Windows hosts with the .NET framework installed. For more information and a more detailed README, check out: https://github.com/airzero24/Atlas"""
     supports_dynamic_loading = False
@@ -58,7 +57,7 @@ class Atlas(PayloadType):
         "output_type": BuildParameter(
             name="output_type",
             parameter_type=BuildParameterType.ChooseOne,
-            choices=["WinExe", "Raw"],
+            choices=["WinExe", "Shellcode"],
             default_value="WinExe",
             description="Output as an EXE or Raw shellcode from Donut",
         ),
@@ -72,7 +71,8 @@ class Atlas(PayloadType):
         # this function gets called to create an instance of your payload
         resp = BuildResponse(status=BuildStatus.Error)
         # create the payload
-        stdout_err = ""
+        stdout = ""
+        stderr = ""
         try:
             agent_build_path = tempfile.TemporaryDirectory(suffix=self.uuid)
             # shutil to copy payload files over
@@ -130,18 +130,17 @@ class Atlas(PayloadType):
                 cwd=agent_build_path.name,
             )
             stdout, stderr = await proc.communicate()
-            stdout_err = ""
-            if stdout:
-                stdout_err += f"[stdout]\n{stdout.decode()}\n"
-            if stderr:
-                stdout_err += f"[stderr]\n{stderr.decode()}"
+            stdout = f"[stdout]\n{stdout.decode()}\n"
+            stderr = f"[stderr]\n{stderr.decode()}\n"
             if os.path.exists("{}/Atlas.exe".format(agent_build_path.name)):
                 # we successfully built an exe, see if we need to convert it to shellcode
-                if self.get_parameter("output_type") != "Raw":
+                if self.get_parameter("output_type") != "Shellcode":
                     resp.payload = open(
                         "{}/Atlas.exe".format(agent_build_path.name), "rb"
                     ).read()
-                    resp.set_message("Successfully Built")
+                    resp.build_message = "Successfully Built"
+                    resp.build_message += "\n\n" + str(stdout)
+                    resp.build_stderr = str(stderr)
                     resp.status = BuildStatus.Success
                 else:
                     command = "chmod 777 {}/donut; chmod +x {}/donut".format(
@@ -153,11 +152,13 @@ class Atlas(PayloadType):
                         stderr=asyncio.subprocess.PIPE,
                         cwd=agent_build_path.name,
                     )
-                    stdout, stderr = await proc.communicate()
-                    stdout_err += "Changing donut to be executable..."
-                    stdout_err += stdout.decode()
-                    stdout_err += stderr.decode()
-                    stdout_err += "Done."
+                    stdout2, stderr2 = await proc.communicate()
+                    stdout += "Changing donut to be executable..."
+                    stderr += "Changing donut to be executable..."
+                    stdout += stdout2.decode()
+                    stdout += "\nDone\n"
+                    stderr += stderr2.decode()
+                    stderr += "\nDone\n"
                     if (
                         self.get_parameter("arch") == "x64"
                         or self.get_parameter("arch") == "Any CPU"
@@ -175,27 +176,30 @@ class Atlas(PayloadType):
                         stderr=asyncio.subprocess.PIPE,
                         cwd=agent_build_path.name,
                     )
-                    stdout, stderr = await proc.communicate()
-                    if stdout:
-                        stdout_err += f"[stdout]\n{stdout.decode()}"
-                    if stderr:
-                        stdout_err += f"[stderr]\n{stderr.decode()}"
+                    stdout2, stderr2 = await proc.communicate()
+                    if stdout2:
+                        stdout += f"[donut - stdout]\n{stdout2.decode()}"
+                    if stderr2:
+                        stderr += f"[donut - stderr]\n{stderr2.decode()}"
                     if os.path.exists("{}/loader.bin".format(agent_build_path.name)):
                         resp.payload = open(
                             "{}/loader.bin".format(agent_build_path.name), "rb"
                         ).read()
                         resp.status = BuildStatus.Success
-                        resp.message = (
-                            "Successfully used Donut to generate Raw Shellcode"
-                        )
+                        resp.build_message = "Successfully used Donut to generate Raw Shellcode"
+                        resp.build_stdout += "\n\n" + str(stdout)
                     else:
                         resp.status = BuildStatus.Error
-                        resp.message = stdout_err
+                        resp.build_message = "Failed to build atlas with donut"
+                        resp.build_stdout = str(stdout)
+                        resp.build_stderr = str(stderr)
                         resp.payload = b""
             else:
                 # something went wrong, return our errors
-                resp.set_message(stdout_err)
+                resp.build_stdout = str(stdout)
+                resp.build_stderr = str(stderr)
         except Exception as e:
             resp.set_status(BuildStatus.Error)
-            resp.message = "Error building payload: " + str(e) + "\n" + stdout_err
+            resp.build_stderr = "Error building payload: " + str(sys.exc_info()[-1].tb_lineno) + " " + str(e) + "\n" + str(stderr)
+            resp.build_stdout = str(stdout)
         return resp

@@ -1,6 +1,8 @@
 from mythic_payloadtype_container.MythicCommandBase import *
 import json
-from mythic_payloadtype_container.MythicFileRPC import *
+import base64
+import sys
+from mythic_payloadtype_container.MythicRPC import *
 
 
 class LoadAssemblyArguments(TaskArguments):
@@ -8,7 +10,7 @@ class LoadAssemblyArguments(TaskArguments):
         super().__init__(command_line)
         self.args = {
             "assembly_id": CommandParameter(
-                name="assembly_id",
+                name="File to Load",
                 type=ParameterType.File,
                 description="",
                 required=False,
@@ -25,14 +27,8 @@ class LoadAssemblyCommand(CommandBase):
     cmd = "loadassembly"
     needs_admin = False
     help_cmd = "loadassembly"
-    description = "Load an arbitrary .NET assembly via Assembly.Load and track the assembly FullName to call for execution with the runassembly command. If assembly is loaded through Apfell's services -> host file, then operators can simply specify the filename from the uploaded file"
+    description = "Load an arbitrary .NET assembly via Assembly.Load and track the assembly FullName to call for execution with the runassembly command. "
     version = 1
-    is_exit = False
-    is_file_browse = False
-    is_process_list = False
-    is_download_file = False
-    is_remove_file = False
-    is_upload_file = False
     author = ""
     argument_class = LoadAssemblyArguments
     attackmapping = []
@@ -41,26 +37,29 @@ class LoadAssemblyCommand(CommandBase):
         task.args.add_arg("remote_path", "")
         if task.args.get_arg("assembly_id") is None:
             # the user supplied an assembly name instead of uploading one, see if we can find it
-            resp = await MythicFileRPC(task).get_file_by_name(task.args.command_line)
+            # the get_file call always returns an array of matching files limited by how many we specify
+            resp = await MythicRPC().execute("get_file", task_id=task.id, filename=task.args.command_line, limit_by_callback=False)
             if resp.status == MythicStatus.Success:
-                task.args.add_arg("assembly_id", resp.agent_file_id)
+                task.args.add_arg("assembly_id", resp.response[0]["agent_file_id"])
             else:
-                raise ValueError(
+                raise Exception(
                     "Failed to find file:  {}".format(task.args.command_line)
                 )
         else:
-            filename = json.loads(task.original_params)["assembly_id"]
-            resp = await MythicFileRPC(task).register_file(
-                file=task.args.get_arg("assembly_id"),
-                saved_file_name=filename,
-                delete_after_fetch=False,
-            )
-            if resp.status == MythicStatus.Success:
-                task.args.add_arg("assembly_id", resp.agent_file_id)
+            filename = json.loads(task.original_params)["File to Load"]
+            file_resp = await MythicRPC().execute("create_file", task_id=task.id,
+                                                  file=base64.b64encode(task.args.get_arg("assembly_id")).decode(),
+                                                  saved_file_name=filename,
+                                                  delete_after_fetch=False,
+                                                  )
+            if file_resp.status == MythicStatus.Success:
+                task.args.add_arg("assembly_id", file_resp.response["agent_file_id"])
+                task.display_params = filename
             else:
-                raise ValueError(
-                    "Failed to register file with Mythic: {}".format(resp.error_message)
+                raise Exception(
+                    "Failed to register file with Mythic: {}".format(file_resp.error_message)
                 )
+
         return task
 
     async def process_response(self, response: AgentResponse):

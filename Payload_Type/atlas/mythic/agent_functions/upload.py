@@ -1,6 +1,6 @@
 from mythic_payloadtype_container.MythicCommandBase import *
 import json
-from mythic_payloadtype_container.MythicFileRPC import *
+from mythic_payloadtype_container.MythicRPC import *
 
 
 class UploadArguments(TaskArguments):
@@ -8,7 +8,7 @@ class UploadArguments(TaskArguments):
         super().__init__(command_line)
         self.args = {
             "assembly_id": CommandParameter(
-                name="assembly_id", type=ParameterType.File, description=""
+                name="File to Upload", type=ParameterType.File, description="", ui_position=1
             ),
             "remote_path": CommandParameter(
                 name="remote_path",
@@ -33,28 +33,27 @@ class UploadCommand(CommandBase):
     help_cmd = "upload"
     description = "Upload a file to the remote host"
     version = 1
-    is_exit = False
-    is_file_browse = False
-    is_process_list = False
-    is_download_file = False
-    is_remove_file = False
-    is_upload_file = False
     author = ""
     argument_class = UploadArguments
     attackmapping = ["T1132", "T1030"]
 
     async def create_tasking(self, task: MythicTask) -> MythicTask:
-        filename = json.loads(task.original_params)["assembly_id"]
-        resp = await MythicFileRPC(task).register_file(
-            file=task.args.get_arg("assembly_id"),
-            saved_file_name=filename,
-            delete_after_fetch=False,
-        )
-        if resp.status == MythicStatus.Success:
-            task.args.add_arg("assembly_id", resp.agent_file_id)
+        filename = json.loads(task.original_params)["File to Upload"]
+        file_resp = await MythicRPC().execute("create_file", task_id=task.id,
+                                              file=base64.b64encode(task.args.get_arg("assembly_id")).decode(),
+                                              saved_file_name=filename,
+                                              delete_after_fetch=False,
+                                              )
+        if file_resp.status == MythicStatus.Success:
+            task.args.add_arg("assembly_id", file_resp.response["agent_file_id"])
+            if task.args.get_arg("remote_path") == "":
+                task.args.add_arg("remote_path", filename)
+            elif task.args.get_arg("remote_path")[-1] == "\\":
+                task.args.add_arg("remotepath", task.args.get_arg("remote_path") + filename)
+            task.display_params = filename + " to " + task.args.get_arg("remote_path")
         else:
-            raise ValueError(
-                "Failed to register file with Mythic: {}".format(resp.error_message)
+            raise Exception(
+                "Failed to register file with Mythic: {}".format(file_resp.error_message)
             )
         return task
 

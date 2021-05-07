@@ -19,12 +19,6 @@ class ListLoadedCommand(CommandBase):
         "Retrieve a list of .NET assemblies loaded via the loadassembly command. "
     )
     version = 1
-    is_exit = False
-    is_file_browse = False
-    is_process_list = False
-    is_download_file = False
-    is_remove_file = False
-    is_upload_file = False
     author = ""
     argument_class = ListLoadedArguments
     attackmapping = []

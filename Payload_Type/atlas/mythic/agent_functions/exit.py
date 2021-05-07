@@ -17,12 +17,7 @@ class ExitCommand(CommandBase):
     help_cmd = "exit"
     description = "This exits the current atlas instance by leveraging the Environment.Exit class method."
     version = 1
-    is_exit = True
-    is_file_browse = False
-    is_process_list = False
-    is_download_file = False
-    is_remove_file = False
-    is_upload_file = False
+    supported_ui_features = ["callback_table:exit"]
     author = ""
     argument_class = ExitArguments
     attackmapping = []

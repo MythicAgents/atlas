@@ -328,9 +328,11 @@ namespace Atlas
                         break;
                 }
             }
-            catch
+            catch (Exception e)
             {
-
+                        Job.completed = true;
+                        Job.response = $"Hit an exception: '{e}'";
+                        Job.success = false;
             }
         }
 

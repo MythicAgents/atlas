@@ -17,12 +17,7 @@ class PsCommand(CommandBase):
     help_cmd = "ps"
     description = "Gather list of running processes."
     version = 1
-    is_exit = False
-    is_file_browse = False
-    is_process_list = True
-    is_download_file = False
-    is_remove_file = False
-    is_upload_file = False
+    supported_ui_features = ["process_browser:list"]
     author = ""
     argument_class = PsArguments
     attackmapping = []

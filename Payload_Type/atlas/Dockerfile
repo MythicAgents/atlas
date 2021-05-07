@@ -1,3 +1,1 @@
-From itsafeaturemythic/csharp_payload:0.0.9
-RUN python3.8 -m pip uninstall -y mythic_payloadtype_container
-RUN python3.8 -m pip install mythic_payloadtype_container==0.0.38
+FROM itsafeaturemythic/csharp_payload:0.0.11
