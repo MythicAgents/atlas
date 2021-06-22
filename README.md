@@ -1,8 +1,8 @@
 # Atlas
 
-Atlas is a .NET 3.5 and .NET 4.0 compatible agent that is designed as an initial payload offering only the bare essentials before loading upa more fully-featured agent. This payload is updated for Mythic 2.2.6 and will update as necessary. It is not compatible with Mythic 2.1 and below.
+Atlas is a .NET 3.5 and .NET 4.0 compatible agent that is designed as an initial payload offering only the bare essentials before loading upa more fully-featured agent. This payload is updated for Mythic 2.2.7 and will update as necessary. It is not compatible with Mythic 2.1 and below.
 
-The agent has `mythic_payloadtype_container==0.0.43` PyPi package installed and reports to Mythic as version "7".
+The agent has `mythic_payloadtype_container==0.0.44` PyPi package installed and reports to Mythic as version "8".
 
 ## How to install an agent in this format within Mythic
 
