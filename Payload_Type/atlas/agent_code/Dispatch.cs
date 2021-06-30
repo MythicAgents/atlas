@@ -133,6 +133,7 @@ namespace Atlas {
                             args = new string[] { runAssembly.args };
                         }
                         string response = AssemblyManagement.Invoke(runAssembly.assembly_id, args);
+                        response = System.Text.RegularExpressions.Regex.Escape(response.Substring(0, response.Length - 2));
                         if (response.Length < Config.ChunkSize)
                         {
                             Job.response = response;
