@@ -126,7 +126,7 @@ namespace Atlas {
                         string[] args = new string[] { };
                         if (runAssembly.args.Length >= 2)
                         {
-                            args = runAssembly.args.Split();
+                            args = runAssembly.args.Split(' ');
                         }
                         else
                         {

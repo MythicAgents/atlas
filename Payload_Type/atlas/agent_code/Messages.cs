@@ -110,32 +110,36 @@ namespace Atlas {
             public string action { get; set; }
             public string id { get; set; }
             public string status { get; set; }
+            public string process_name { get; set; }
 
-            public static string CheckInResponseFormat = @"{{""status"":""{0}"",""id"":""{1}"",""action"":""{2}""}}";
+            public static string CheckInResponseFormat = @"{{""status"":""{0}"",""process_name"":""{1}"",""id"":""{2}"",""action"":""{3}""}}";
 
             public static List<string> Parse(string data, string format)
             {
-                format = Regex.Escape(Regex.Unescape(format));
+                format = Regex.Escape(format).Replace("\\{", "{");
                 if (format.Contains("{0}")) { format = format.Replace("{0}", "(?'group0'.*)"); }
                 if (format.Contains("{1}")) { format = format.Replace("{1}", "(?'group1'.*)"); }
                 if (format.Contains("{2}")) { format = format.Replace("{2}", "(?'group2'.*)"); }
+                if (format.Contains("{3}")) { format = format.Replace("{3}", "(?'group3'.*)"); }
                 Match match = new Regex(format).Match(Regex.Unescape(data));
                 List<string> matches = new List<string>();
                 if (match.Groups["group0"] != null) { matches.Add(Regex.Unescape(match.Groups["group0"].Value)); }
                 if (match.Groups["group1"] != null) { matches.Add(Regex.Unescape(match.Groups["group1"].Value)); }
                 if (match.Groups["group2"] != null) { matches.Add(Regex.Unescape(match.Groups["group2"].Value)); }
+                if (match.Groups["group3"] != null) { matches.Add(Regex.Unescape(match.Groups["group3"].Value)); }
                 return matches;
             }
 
             public static CheckInResponse FromJson(string message)
             {
                 List<string> parseList = CheckInResponse.Parse(message, CheckInResponseFormat.Replace("{{", "{").Replace("}}", "}"));
-                if (parseList.Count != 3) { return null; }
+                if (parseList.Count != 4) { return null; }
                 return new CheckInResponse
                 {
                     status = parseList[0],
-                    id = parseList[1],
-                    action = parseList[2]
+                    process_name = parseList[1],
+                    id = parseList[2],
+                    action = parseList[3]
                 };
             }
         }
@@ -171,13 +175,13 @@ namespace Atlas {
 
             public static List<string> Parse(string data, string format)
             {
-                format = Regex.Escape(Regex.Unescape(format));
+                format = Regex.Escape(format).Replace("\\{", "{");
                 if (format.Contains("{0}")) { format = format.Replace("{0}", "(?'group0'.*)"); }
                 if (format.Contains("{1}")) { format = format.Replace("{1}", "(?'group1'.*)"); }
                 Match match = new Regex(format).Match(Regex.Unescape(data));
                 List<string> matches = new List<string>();
                 if (match.Groups["group0"] != null) { matches.Add(Regex.Unescape(match.Groups["group0"].Value)); }
-                if (match.Groups["group1"] != null) { matches.Add(Regex.Unescape(match.Groups["group1"].Value)); }
+                if (match.Groups["group1"] != null) { matches.Add(match.Groups["group1"].Value); }
                 return matches;
             }
 
@@ -239,7 +243,7 @@ namespace Atlas {
 
             public static List<string> Parse(string data, string format)
             {
-                format = Regex.Escape(Regex.Unescape(format));
+                format = Regex.Escape(format).Replace("\\{", "{");
                 if (format.Contains("{0}")) { format = format.Replace("{0}", "(?'group0'.*)"); }
                 if (format.Contains("{1}")) { format = format.Replace("{1}", "(?'group1'.*)"); }
                 Match match = new Regex(format).Match(Regex.Unescape(data));
@@ -272,7 +276,7 @@ namespace Atlas {
 
             public static List<string> Parse(string data, string format)
             {
-                format = Regex.Escape(Regex.Unescape(format));
+                format = Regex.Escape(format).Replace("\\{", "{");
                 if (format.Contains("{0}")) { format = format.Replace("{0}", "(?'group0'.*)"); }
                 if (format.Contains("{1}")) { format = format.Replace("{1}", "(?'group1'.*)"); }
                 if (format.Contains("{2}")) { format = format.Replace("{2}", "(?'group2'.*)"); }
@@ -280,7 +284,7 @@ namespace Atlas {
                 Match match = new Regex(format).Match(Regex.Unescape(data));
                 List<string> matches = new List<string>();
                 if (match.Groups["group0"] != null) { matches.Add(Regex.Unescape(match.Groups["group0"].Value)); }
-                if (match.Groups["group1"] != null) { matches.Add(Regex.Unescape(match.Groups["group1"].Value)); }
+                if (match.Groups["group1"] != null) { matches.Add(match.Groups["group1"].Value); }
                 if (match.Groups["group2"] != null) { matches.Add(Regex.Unescape(match.Groups["group2"].Value)); }
                 if (match.Groups["group3"] != null) { matches.Add(Regex.Unescape(match.Groups["group3"].Value)); }
                 return matches;
@@ -435,7 +439,7 @@ namespace Atlas {
 
             public static List<string> ParseSuccess(string data, string format)
             {
-                format = Regex.Escape(Regex.Unescape(format));
+                format = Regex.Escape(format).Replace("\\{", "{");
                 if (format.Contains("{0}")) { format = format.Replace("{0}", "(?'group0'.*)"); }
                 if (format.Contains("{1}")) { format = format.Replace("{1}", "(?'group1'.*)"); }
                 Match match = new Regex(format).Match(Regex.Unescape(data));
@@ -447,7 +451,7 @@ namespace Atlas {
 
             public static List<string> ParseError(string data, string format)
             {
-                format = Regex.Escape(Regex.Unescape(format));
+                format = Regex.Escape(format).Replace("\\{", "{");
                 if (format.Contains("{0}")) { format = format.Replace("{0}", "(?'group0'.*)"); }
                 if (format.Contains("{1}")) { format = format.Replace("{1}", "(?'group1'.*)"); }
                 if (format.Contains("{2}")) { format = format.Replace("{2}", "(?'group2'.*)"); }
@@ -564,7 +568,7 @@ namespace Atlas {
 
             public static List<string> Parse(string data, string format)
             {
-                format = Regex.Escape(Regex.Unescape(format));
+                format = Regex.Escape(format).Replace("\\{", "{");
                 if (format.Contains("{0}")) { format = format.Replace("{0}", "(?'group0'.*)"); }
                 if (format.Contains("{1}")) { format = format.Replace("{1}", "(?'group1'.*)"); }
                 Match match = new Regex(format).Match(Regex.Unescape(data));
@@ -595,7 +599,7 @@ namespace Atlas {
 
             public static List<string> Parse(string data, string format)
             {
-                format = Regex.Escape(Regex.Unescape(format));
+                format = Regex.Escape(format).Replace("\\{", "{");
                 if (format.Contains("{0}")) { format = format.Replace("{0}", "(?'group0'.*)"); }
                 if (format.Contains("{1}")) { format = format.Replace("{1}", "(?'group1'.*)"); }
                 Match match = new Regex(format).Match(Regex.Unescape(data));
@@ -650,18 +654,20 @@ namespace Atlas {
             public string chunk_data { get; set; }
             public string file_id { get; set; }
             public string task_id { get; set; }
+            public int chunk_size { get; set; }
 
-            public static string UploadResponseFormat = @"{{""action"":""{0}"",""total_chunks"":{1},""chunk_num"":{2},""chunk_data"":""{3}"",""file_id"":""{4}"",""task_id"":""{5}""}}";
+            public static string UploadResponseFormat = @"{{""chunk_size"":{0},""action"":""{1}"",""total_chunks"":{2},""chunk_num"":{3},""chunk_data"":""{4}"",""file_id"":""{5}"",""task_id"":""{6}""}}";
 
             public static List<string> Parse(string data, string format)
             {
-                format = Regex.Escape(Regex.Unescape(format));
+                format = Regex.Escape(format).Replace("\\{", "{");
                 if (format.Contains("{0}")) { format = format.Replace("{0}", "(?'group0'.*)"); }
                 if (format.Contains("{1}")) { format = format.Replace("{1}", "(?'group1'.*)"); }
                 if (format.Contains("{2}")) { format = format.Replace("{2}", "(?'group2'.*)"); }
                 if (format.Contains("{3}")) { format = format.Replace("{3}", "(?'group3'.*)"); }
                 if (format.Contains("{4}")) { format = format.Replace("{4}", "(?'group4'.*)"); }
                 if (format.Contains("{5}")) { format = format.Replace("{5}", "(?'group5'.*)"); }
+                if (format.Contains("{6}")) { format = format.Replace("{6}", "(?'group6'.*)"); }
                 Match match = new Regex(format).Match(Regex.Unescape(data));
                 List<string> matches = new List<string>();
                 if (match.Groups["group0"] != null) { matches.Add(Regex.Unescape(match.Groups["group0"].Value)); }
@@ -670,21 +676,23 @@ namespace Atlas {
                 if (match.Groups["group3"] != null) { matches.Add(Regex.Unescape(match.Groups["group3"].Value)); }
                 if (match.Groups["group4"] != null) { matches.Add(Regex.Unescape(match.Groups["group4"].Value)); }
                 if (match.Groups["group5"] != null) { matches.Add(Regex.Unescape(match.Groups["group5"].Value)); }
+                if (match.Groups["group6"] != null) { matches.Add(Regex.Unescape(match.Groups["group6"].Value)); }
                 return matches;
             }
 
             public static UploadResponse FromJson(string message)
             {
                 List<string> parseList = UploadResponse.Parse(message, UploadResponseFormat.Replace("{{", "{").Replace("}}", "}"));
-                if (parseList.Count != 6) { return null; }
+                if (parseList.Count != 7) { return null; }
                 return new UploadResponse
                 {
-                    action = parseList[0],
-                    total_chunks = Int32.Parse(parseList[1]),
-                    chunk_num = Int32.Parse(parseList[2]),
-                    chunk_data = parseList[3],
-                    file_id = parseList[4],
-                    task_id = parseList[5]
+                    chunk_size = Int32.Parse(parseList[0]),
+                    action = parseList[1],
+                    total_chunks = Int32.Parse(parseList[2]),
+                    chunk_num = Int32.Parse(parseList[3]),
+                    chunk_data = parseList[4],
+                    file_id = parseList[5],
+                    task_id = parseList[6]
                 };
             }
         }
@@ -801,7 +809,7 @@ namespace Atlas {
 
             public static List<string> Parse(string data, string format)
             {
-                format = Regex.Escape(Regex.Unescape(format));
+                format = Regex.Escape(format).Replace("\\{", "{");
                 if (format.Contains("{0}")) { format = format.Replace("{0}", "(?'group0'.*)"); }
                 if (format.Contains("{1}")) { format = format.Replace("{1}", "(?'group1'.*)"); }
                 if (format.Contains("{2}")) { format = format.Replace("{2}", "(?'group2'.*)"); }
@@ -857,7 +865,7 @@ namespace Atlas {
 
             public static List<string> Parse(string data, string format)
             {
-                format = Regex.Escape(Regex.Unescape(format));
+                format = Regex.Escape(format).Replace("\\{", "{");
                 if (format.Contains("{0}")) { format = format.Replace("{0}", "(?'group0'.*)"); }
                 if (format.Contains("{1}")) { format = format.Replace("{1}", "(?'group1'.*)"); }
                 if (format.Contains("{2}")) { format = format.Replace("{2}", "(?'group2'.*)"); }

