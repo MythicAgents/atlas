@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+
 namespace Atlas
 {
     public class Config
     {
         public static List<string> CallbackHosts = new List<string> { "callback_host:callback_port" };
-        public static List<Utils.Server> Servers = new List<Utils.Server> { };
+        public static List<Messages.Server> Servers = new List<Messages.Server> { };
         public static string PayloadUUID = "%UUID%";
         public static string UUID = "";
         public static string UserAgent = "USER_AGENT";

