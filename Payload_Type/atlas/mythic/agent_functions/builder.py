@@ -68,7 +68,7 @@ class Atlas(PayloadType):
             choices=["true", "false"],
             default_value="false",
             required=False,
-            description="Obfuscate ouput payload with ConfuserEx",
+            description="Obfuscate output payload with ConfuserEx",
         ),
     }
     c2_profiles = ["http"]
