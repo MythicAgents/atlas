@@ -1,0 +1,8 @@
+<project outputDir="REPLACEMEOUT" baseDir="REPLACEMEBASE" xmlns="http://confuser.codeplex.com">
+  <rule pattern="true" preset="normal" inherit="false">
+    <protection id="watermark" action="remove" />
+    <protection id="ctrl flow" action="remove" />
+    <protection id="ref proxy" action="remove" />
+  </rule>
+  <module path="Atlas.exe" />
+</project>

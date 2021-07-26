@@ -4,6 +4,7 @@ import asyncio
 import os
 from distutils.dir_util import copy_tree
 import tempfile
+import shutil
 import sys
 
 class Atlas(PayloadType):
@@ -60,6 +61,14 @@ class Atlas(PayloadType):
             choices=["WinExe", "Shellcode"],
             default_value="WinExe",
             description="Output as an EXE or Raw shellcode from Donut",
+        ),
+        "obfuscate": BuildParameter(
+            name="obfuscate",
+            parameter_type=BuildParameterType.ChooseOne,
+            choices=["true", "false"],
+            default_value="false",
+            required=False,
+            description="Obfuscate ouput payload with ConfuserEx",
         ),
     }
     c2_profiles = ["http"]
@@ -133,6 +142,47 @@ class Atlas(PayloadType):
             stdout = f"[stdout]\n{stdout.decode()}\n"
             stderr = f"[stderr]\n{stderr.decode()}\n"
             if os.path.exists("{}/Atlas.exe".format(agent_build_path.name)):
+                # we successfully built an exe, see if we need to obfuscate it
+                if self.get_parameter("obfuscate") != "false":
+                    with open("{}/obs/confuserex/atlas.crproj".format(agent_build_path.name), 'r') as file :
+                        filedata = file.read()
+                    filedata = filedata.replace('REPLACEMEBASE', "{}".format(agent_build_path.name))
+                    filedata = filedata.replace('REPLACEMEOUT', "{}/obs".format(agent_build_path.name))
+                    with open("{}/obs/confuserex/atlas-temp.crproj".format(agent_build_path.name), 'w') as file:
+                        file.write(filedata)
+
+                    command = "mono {}/obs/confuserex/Confuser.CLI.exe {}/obs/confuserex/atlas-temp.crproj".format(
+                        agent_build_path.name, agent_build_path.name
+                    )
+                    
+                    proc = await asyncio.create_subprocess_shell(
+                        command,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                        cwd=agent_build_path.name,
+                    )
+                    stdout2, stderr2 = await proc.communicate()
+                    stdout += "Executing ConfuserEx..."
+                    stderr += "Executing ConfuserEx..."
+                    stdout += stdout2.decode()
+                    stdout += "\nDone\n"
+                    stderr += stderr2.decode()
+                    stderr += "\nDone\n"
+                    
+                    stdout2, stderr2 = await proc.communicate()
+                    if stdout2:
+                        stdout += f"[cex - stdout]\n{stdout2.decode()}"
+                    if stderr2:
+                        stderr += f"[cex - stderr]\n{stderr2.decode()}"
+                    if os.path.exists("{}/obs/Atlas.exe".format(agent_build_path.name)):
+                        os.remove("{}/obs/confuserex/atlas-temp.crproj".format(agent_build_path.name))
+                        shutil.move("{}/obs/Atlas.exe".format(agent_build_path.name), "{}/Atlas.exe".format(agent_build_path.name))
+                    else:
+                        resp.status = BuildStatus.Error
+                        resp.build_message = "Failed to obfuscate atlas with cex"
+                        resp.build_stdout = str(stdout)
+                        resp.build_stderr = str(stderr)
+                        resp.payload = b""
                 # we successfully built an exe, see if we need to convert it to shellcode
                 if self.get_parameter("output_type") != "Shellcode":
                     resp.payload = open(
