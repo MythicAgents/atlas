@@ -70,7 +70,7 @@ class LoadAssemblyCommand(CommandBase):
     async def create_tasking(self, task: MythicTask) -> MythicTask:
         try:
             groupName = task.args.get_parameter_group_name()
-            task.args.add_arg(name="remote_path", value="", parameter_group_info=[ParameterGroupInfo(group_name=groupName)])
+            task.args.add_arg("remote_path", value="", parameter_group_info=[ParameterGroupInfo(group_name=groupName)])
             if groupName == "Default":
                 filename = json.loads(task.original_params)["assembly_id"]
                 file_resp = await MythicRPC().execute("create_file", task_id=task.id,

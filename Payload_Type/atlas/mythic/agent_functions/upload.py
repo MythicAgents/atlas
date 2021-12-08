@@ -48,7 +48,7 @@ class UploadCommand(CommandBase):
     attackmapping = ["T1132", "T1030"]
 
     async def create_tasking(self, task: MythicTask) -> MythicTask:
-        filename = json.loads(task.original_params)["File to Upload"]
+        filename = json.loads(task.original_params)["assembly_id"]
         file_resp = await MythicRPC().execute("create_file", task_id=task.id,
                                               file=base64.b64encode(task.args.get_arg("assembly_id")).decode(),
                                               saved_file_name=filename,
