@@ -4,18 +4,25 @@ from mythic_payloadtype_container.MythicRPC import *
 
 
 class UploadArguments(TaskArguments):
-    def __init__(self, command_line):
-        super().__init__(command_line)
-        self.args = {
-            "assembly_id": CommandParameter(
-                name="File to Upload", type=ParameterType.File, description="", ui_position=1
+    def __init__(self, command_line, **kwargs):
+        super().__init__(command_line, **kwargs)
+        self.args = [
+            CommandParameter(
+                name="assembly_id",
+                display_name="File to Upload", type=ParameterType.File, description="",
+                parameter_group_info=[
+                    ParameterGroupInfo(
+                        required=True,
+                        ui_position=1
+                    )
+                ]
             ),
-            "remote_path": CommandParameter(
+            CommandParameter(
                 name="remote_path",
                 type=ParameterType.String,
                 description="Take a file from the database and store it on disk through the callback.",
             ),
-        }
+        ]
 
     async def parse_arguments(self):
         if len(self.command_line) > 0:
@@ -25,6 +32,9 @@ class UploadArguments(TaskArguments):
                 raise ValueError("Missing JSON argument")
         else:
             raise ValueError("Missing required parameters")
+
+    async def parse_dictionary(self, dictionary):
+        self.load_args_from_dictionary(dictionary)
 
 
 class UploadCommand(CommandBase):
@@ -38,7 +48,7 @@ class UploadCommand(CommandBase):
     attackmapping = ["T1132", "T1030"]
 
     async def create_tasking(self, task: MythicTask) -> MythicTask:
-        filename = json.loads(task.original_params)["File to Upload"]
+        filename = json.loads(task.original_params)["assembly_id"]
         file_resp = await MythicRPC().execute("create_file", task_id=task.id,
                                               file=base64.b64encode(task.args.get_arg("assembly_id")).decode(),
                                               saved_file_name=filename,

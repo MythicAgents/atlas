@@ -239,7 +239,7 @@ namespace Atlas {
                 responses = new List<Response>();
             }
 
-            public static string PostResponseResponseFormat = @"{{""action"":""{0}"",""responses"":{1}}}";
+            public static string PostResponseResponseFormat = @"{{""action"":""{0}"",""responses"":[{1}]}}";
 
             public static List<string> Parse(string data, string format)
             {
@@ -265,7 +265,7 @@ namespace Atlas {
             }
         }
 
-        public class Task 
+        public class Task
         {
             public string command { get; set; }
             public string parameters { get; set; }
@@ -645,7 +645,7 @@ namespace Atlas {
                 );
             }
         }
-        
+
         public class UploadResponse
         {
             public string action { get; set; }

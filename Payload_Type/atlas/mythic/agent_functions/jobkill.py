@@ -3,24 +3,26 @@ import json
 
 
 class JobKillArguments(TaskArguments):
-    def __init__(self, command_line):
-        super().__init__(command_line)
-        self.args = {
-            "job_id": CommandParameter(
+    def __init__(self, command_line, **kwargs):
+        super().__init__(command_line, **kwargs)
+        self.args = [
+            CommandParameter(
                 name="job_id",
                 type=ParameterType.String,
                 description="The Job Id for the running job to be killed",
+                parameter_group_info=[
+                    ParameterGroupInfo(
+                        required=True,
+                    )
+                ]
             )
-        }
+        ]
 
     async def parse_arguments(self):
-        if len(self.command_line) > 0:
-            if self.command_line[0] == "{":
-                self.load_args_from_json_string(self.command_line)
-            else:
-                self.add_arg("job_id", self.command_line)
-        else:
-            raise ValueError("Missing arguments")
+        self.add_arg("job_id", self.command_line)
+
+    async def parse_dictionary(self, dictionary):
+        self.load_args_from_dictionary(dictionary)
 
 
 class JobKillCommand(CommandBase):

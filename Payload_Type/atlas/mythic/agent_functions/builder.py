@@ -17,51 +17,49 @@ class Atlas(PayloadType):
     wrapped_payloads = ["service_wrapper"]
     note = """This payload uses C# to target Windows hosts with the .NET framework installed. For more information and a more detailed README, check out: https://github.com/airzero24/Atlas"""
     supports_dynamic_loading = False
-    build_parameters = {
-        "version": BuildParameter(
+    build_parameters = [
+        BuildParameter(
             name="version",
             parameter_type=BuildParameterType.ChooseOne,
             description="Choose a target .NET Framework",
             choices=["4.0", "3.5"],
         ),
-        "arch": BuildParameter(
+        BuildParameter(
             name="arch",
             parameter_type=BuildParameterType.ChooseOne,
             choices=["x64", "x86"],
             default_value="x64",
             description="Target architecture",
         ),
-        "chunk_size": BuildParameter(
+        BuildParameter(
             name="chunk_size",
             parameter_type=BuildParameterType.String,
             default_value="512000",
             description="Provide a chunk size for large files",
             required=True,
         ),
-        "cert_pinning": BuildParameter(
+        BuildParameter(
             name="cert_pinning",
-            parameter_type=BuildParameterType.ChooseOne,
-            choices=["false", "true"],
-            default_value="false",
+            parameter_type=BuildParameterType.Boolean,
+            default_value=False,
             required=False,
             description="Require Certificate Pinning",
         ),
-        "default_proxy": BuildParameter(
+        BuildParameter(
             name="default_proxy",
-            parameter_type=BuildParameterType.ChooseOne,
-            choices=["true", "false"],
-            default_value="true",
+            parameter_type=BuildParameterType.Boolean,
+            default_value=True,
             required=False,
             description="Use the default proxy on the system",
         ),
-        "output_type": BuildParameter(
+        BuildParameter(
             name="output_type",
             parameter_type=BuildParameterType.ChooseOne,
             choices=["WinExe", "Shellcode"],
             default_value="WinExe",
             description="Output as an EXE or Raw shellcode from Donut",
         ),
-    }
+    ]
     c2_profiles = ["http"]
     support_browser_scripts = [
         BrowserScript(script_name="create_table", author="@its_a_feature_")
@@ -81,7 +79,7 @@ class Atlas(PayloadType):
             file1 = file1.replace("%UUID%", self.uuid)
             file1 = file1.replace("%CHUNK_SIZE%", self.get_parameter("chunk_size"))
             file1 = file1.replace(
-                "%DEFAULT_PROXY%", self.get_parameter("default_proxy")
+                "%DEFAULT_PROXY%", str(self.get_parameter("default_proxy"))
             )
             profile = None
             for c2 in self.c2info:
