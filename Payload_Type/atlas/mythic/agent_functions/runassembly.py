@@ -55,8 +55,11 @@ class RunAssemblyCommand(CommandBase):
     async def create_tasking(self, task: MythicTask) -> MythicTask:
         # the get_file call always returns an array of matching files limited by how many we specify
         resp = await MythicRPC().execute("get_file", task_id=task.id, filename=task.args.get_arg("assembly_id"))
-        if resp.status == MythicRPCStatus.Success:
-            task.display_params = task.args.get_arg("assembly_id") + " " + task.args.get_arg("args")
+        if resp.status == MythicRPCStatus.Success and len(resp.response) > 0:
+            args = task.args.get_arg("args")
+            if args is None:
+                args = ""
+            task.display_params = task.args.get_arg("assembly_id") + " " + args
             task.args.add_arg("assembly_id", resp.response[0]["agent_file_id"])
         else:
             raise Exception(

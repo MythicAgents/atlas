@@ -72,18 +72,19 @@ class LoadAssemblyCommand(CommandBase):
             groupName = task.args.get_parameter_group_name()
             task.args.add_arg("remote_path", value="", parameter_group_info=[ParameterGroupInfo(group_name=groupName)])
             if groupName == "Default":
-                filename = json.loads(task.original_params)["assembly_id"]
-                file_resp = await MythicRPC().execute("create_file", task_id=task.id,
-                                                      file=base64.b64encode(task.args.get_arg("assembly_id")).decode(),
-                                                      saved_file_name=filename,
-                                                      delete_after_fetch=False,
-                                                      )
+                file_resp = await MythicRPC().execute("get_file",
+                                                      file_id=task.args.get_arg("assembly_id"),
+                                                      task_id=task.id,
+                                                      get_contents=False)
                 if file_resp.status == MythicRPCStatus.Success:
-                    task.args.add_arg("assembly_id", file_resp.response["agent_file_id"])
-                    task.display_params = filename
+                    if len(file_resp.response) > 0:
+                        filename = file_resp.response[0]["filename"]
+                        task.display_params = filename
+                    else:
+                        raise Exception("Failed to locate file with Mythic")
                 else:
                     raise Exception(
-                        "Failed to register file with Mythic: {}".format(file_resp.error_message)
+                        "Failed to locate file with Mythic: {}".format(file_resp.error_message)
                     )
             else:
                 # the user supplied an assembly name instead of uploading one, see if we can find it

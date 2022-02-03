@@ -48,23 +48,25 @@ class UploadCommand(CommandBase):
     attackmapping = ["T1132", "T1030"]
 
     async def create_tasking(self, task: MythicTask) -> MythicTask:
-        filename = json.loads(task.original_params)["assembly_id"]
-        file_resp = await MythicRPC().execute("create_file", task_id=task.id,
-                                              file=base64.b64encode(task.args.get_arg("assembly_id")).decode(),
-                                              saved_file_name=filename,
-                                              delete_after_fetch=False,
-                                              )
-        if file_resp.status == MythicStatus.Success:
-            task.args.add_arg("assembly_id", file_resp.response["agent_file_id"])
-            if task.args.get_arg("remote_path") == "":
-                task.args.add_arg("remote_path", filename)
-            elif task.args.get_arg("remote_path")[-1] == "\\":
-                task.args.add_arg("remotepath", task.args.get_arg("remote_path") + filename)
-            task.display_params = filename + " to " + task.args.get_arg("remote_path")
-        else:
-            raise Exception(
-                "Failed to register file with Mythic: {}".format(file_resp.error_message)
-            )
+        file_resp = await MythicRPC().execute("get_file",
+                                              file_id=task.args.get_arg("assembly_id"),
+                                              task_id=task.id,
+                                              get_contents=False)
+        if file_resp.status == MythicRPCStatus.Success:
+            if len(file_resp.response) > 0:
+                filename = file_resp.response[0]["filename"]
+                if file_resp.status == MythicStatus.Success:
+                    if task.args.get_arg("remote_path") == "":
+                        task.args.add_arg("remote_path", filename)
+                    elif task.args.get_arg("remote_path")[-1] == "\\":
+                        task.args.add_arg("remotepath", task.args.get_arg("remote_path") + filename)
+                    task.display_params = filename + " to " + task.args.get_arg("remote_path")
+                else:
+                    raise Exception(
+                        "Failed to register file with Mythic: {}".format(file_resp.error_message)
+                    )
+            else:
+                raise Exception("Error from Mythic trying to get file: " + str(file_resp.error))
         return task
 
     async def process_response(self, response: AgentResponse):
