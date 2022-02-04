@@ -14,7 +14,7 @@ class Atlas(PayloadType):
     supported_os = [SupportedOS.Windows]
     wrapper = False
     mythic_encrypts = True
-    wrapped_payloads = ["service_wrapper"]
+    wrapped_payloads = ["service_wrapper", "scarecrow_wrapper"]
     note = """This payload uses C# to target Windows hosts with the .NET framework installed. For more information and a more detailed README, check out: https://github.com/airzero24/Atlas"""
     supports_dynamic_loading = False
     build_parameters = [
