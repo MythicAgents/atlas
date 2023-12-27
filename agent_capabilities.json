@@ -1,0 +1,14 @@
+{
+  "os": ["Windows"],
+  "languages": [".NET Framework"] ,
+  "features": {
+    "mythic": ["docker", "file chunking", "file browser"],
+    "custom": ["key exchange", "killdate"]
+  },
+  "payload_output": ["exe"],
+  "architectures": ["x86_64"],
+  "c2": ["http"],
+  "mythic_version": "2.3",
+  "agent_version": "",
+  "supported_wrappers": ["service_wrapper"]
+}
